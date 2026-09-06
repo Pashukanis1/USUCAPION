@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>USUCAPIÓN // NATURALEZA DECLARATIVA vs. CONSTITUTIVA</title>
+<style>
+:root{
+ --base03:#002b36;--base02:#073642;--base01:#586e75;--base00:#657b83;
+ --base0:#839496;--base1:#93a1a1;--base2:#eee8d5;--base3:#fdf6e3;
+ --yellow:#b58900;--orange:#cb4b16;--red:#dc322f;--magenta:#d33682;
+ --violet:#6c71c4;--blue:#268bd2;--cyan:#2aa198;--green:#859900;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;font-family:"JetBrains Mono","Cascadia Code","Fira Code",Consolas,monospace}
+body{background:var(--base03);color:var(--base0);line-height:1.45}
+button,input,select{font:inherit}
+button{cursor:pointer}
+.shell{max-width:1500px;margin:auto;padding:20px}
+.topbar{border:1px solid var(--base01);background:var(--base02);padding:16px;box-shadow:0 0 0 1px #001f26}
+.prompt{color:var(--green)}
+h1{font-size:clamp(18px,2.2vw,30px);margin:8px 0;color:var(--base3)}
+h2{font-size:15px;color:var(--cyan);margin:0 0 12px}
+.muted{color:var(--base01)}
+nav{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+nav button,.action{border:1px solid var(--base01);background:var(--base03);color:var(--base0);padding:7px 10px}
+nav button:hover,.action:hover{border-color:var(--cyan);color:var(--base3)}
+nav button.active{background:var(--base01);color:var(--base3)}
+main{margin-top:16px}
+.panel{display:none;border:1px solid var(--base01);background:var(--base02);padding:14px}
+.panel.active{display:block}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.toolbar input,.toolbar select,.modal input,.modal select{background:var(--base03);border:1px solid var(--base01);color:var(--base2);padding:7px;outline:0}
+.toolbar input:focus,.modal input:focus{border-color:var(--cyan)}
+.btn-primary{border-color:var(--cyan);color:var(--cyan)}
+.btn-danger{border-color:var(--red);color:#ff7b76}
+.table-wrap{overflow:auto;max-height:62vh;border:1px solid var(--base01)}
+table{width:100%;border-collapse:collapse;min-width:980px}
+th,td{border-bottom:1px solid #24464d;padding:8px;text-align:left;vertical-align:top}
+th{position:sticky;top:0;background:var(--base02);color:var(--yellow);z-index:1}
+tr:hover td{background:#083c46}
+.badge{display:inline-block;padding:2px 6px;border:1px solid var(--base01);white-space:nowrap}
+.decl{color:var(--green);border-color:var(--green)}
+.const{color:var(--orange);border-color:var(--orange)}
+.nat{color:var(--blue);border-color:var(--blue)}
+.int{color:var(--magenta);border-color:var(--magenta)}
+a{color:var(--blue);text-decoration:none}
+a:hover{text-decoration:underline;color:var(--cyan)}
+.url-list a{display:block;margin-bottom:4px;max-width:600px;overflow-wrap:anywhere}
+.stats-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.stat{border:1px solid var(--base01);padding:13px;background:var(--base03)}
+.stat .num{font-size:28px;color:var(--base3)}
+.stat .label{font-size:11px;color:var(--base1)}
+.charts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:14px}
+.chartbox{border:1px solid var(--base01);padding:12px;background:var(--base03)}
+canvas{width:100%;height:280px}
+.note{border-left:3px solid var(--cyan);padding:8px 12px;background:#073642;margin:12px 0}
+.modal{position:fixed;inset:0;background:#00151ad9;display:none;align-items:center;justify-content:center;padding:20px;z-index:10}
+.modal.open{display:flex}
+.modal-card{width:min(620px,100%);background:var(--base02);border:1px solid var(--cyan);padding:16px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.form-grid label{display:flex;flex-direction:column;gap:4px;font-size:11px;color:var(--base1)}
+.form-grid .wide{grid-column:1/-1}
+.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}
+footer{padding:18px 2px;color:var(--base01);font-size:11px}
+@media(max-width:850px){.stats-grid{grid-template-columns:1fr 1fr}.charts{grid-template-columns:1fr}}
+@media(max-width:520px){.shell{padding:10px}.stats-grid{grid-template-columns:1fr}.form-grid{grid-template-columns:1fr}.form-grid .wide{grid-column:auto}}
+</style>
+</head>
+<body>
+<div class="shell">
+<header class="topbar">
+<div><span class="prompt">user@usucapion</span>:<span class="prompt">~</span>$ research --topic "naturaleza de la usucapión"</div>
+<h1>USUCAPIÓN // DECLARATIVA vs. CONSTITUTIVA</h1>
+<div class="muted">base de fuentes · análisis cuantitativo · gestor editable</div>
+<nav>
+<button class="active" data-tab="sources">[01] FUENTES</button>
+<button data-tab="manage">[02] GESTOR</button>
+<button data-tab="stats">[03] ESTADÍSTICA</button>
+</nav>
+</header>
+
+<main>
+<section id="sources" class="panel active">
+<h2>cat ./fuentes_brindadas</h2>
+<div class="note">Conjunto inicial: fuentes proporcionadas para el trabajo grupal. Los enlaces se mantienen como fueron suministrados en el archivo.</div>
+<div class="toolbar">
+<input id="searchBase" placeholder="buscar título, autor, país..." oninput="renderBase()">
+<select id="filterBase" onchange="renderBase()"><option value="">todas las posiciones</option><option>Declarativa</option><option>Constitutiva</option></select>
+</div>
+<div class="table-wrap"><table><thead><tr><th>#</th><th>Fuente</th><th>Ámbito</th><th>Formato</th><th>Posición</th><th>Enlaces</th></tr></thead><tbody id="baseBody"></tbody></table></div>
+</section>
+
+<section id="manage" class="panel">
+<h2>vim ./fuentes_editables.json</h2>
+<div class="toolbar">
+<button class="action btn-primary" onclick="openModal()">+ agregar fuente</button>
+<button class="action" onclick="exportJSON()">exportar JSON</button>
+<button class="action" onclick="exportCSV()">exportar CSV</button>
+<button class="action btn-danger" onclick="clearCustom()">vaciar fuentes agregadas</button>
+<input id="searchCustom" placeholder="filtrar..." oninput="renderCustom()">
+</div>
+<div class="note">Puedes agregar y quitar fuentes. Las fuentes originales no se modifican; esta tabla gestiona las fuentes que añadas durante la investigación.</div>
+<div class="table-wrap"><table><thead><tr><th>#</th><th>Fuente</th><th>Ámbito</th><th>Formato</th><th>Posición</th><th>Enlaces</th><th>Acción</th></tr></thead><tbody id="customBody"></tbody></table></div>
+</section>
+
+<section id="stats" class="panel">
+<h2>./estadistica --dataset fuentes_totales</h2>
+<div class="stats-grid" id="statsCards"></div>
+<div class="charts">
+<div class="chartbox"><h2>fuentes nacionales vs. internacionales</h2><canvas id="scopeChart"></canvas></div>
+<div class="chartbox"><h2>teoría declarativa vs. constitutiva</h2><canvas id="positionChart"></canvas></div>
+<div class="chartbox"><h2>cruce: ámbito × posición</h2><canvas id="crossChart"></canvas></div>
+<div class="chartbox"><h2>distribución por formato</h2><canvas id="formatChart"></canvas></div>
+</div>
+<div class="note">Las estadísticas se recalculan automáticamente incluyendo las fuentes agregadas. La clasificación de cada fuente sigue los datos de la tabla suministrada; no se ha inferido una posición distinta.</div>
+</section>
+</main>
+<footer>solarized TUI // datos iniciales cargados desde el documento suministrado // almacenamiento local del navegador para fuentes agregadas</footer>
+</div>
+
+<div class="modal" id="modal">
+<div class="modal-card">
+<h2>nuevo registro :: fuente</h2>
+<div class="form-grid">
+<label class="wide">Título / autor<input id="fTitle"></label>
+<label>Ámbito<select id="fScope"><option>Nacional (Perú)</option><option>Internacional (Argentina)</option><option>Internacional (Bolivia)</option><option>Internacional (Colombia)</option><option>Internacional (España)</option><option>Otro</option></select></label>
+<label>Formato<select id="fFormat"><option>Lectura</option><option>Audiovisual</option></select></label>
+<label>Posición<select id="fPosition"><option>Declarativa</option><option>Constitutiva</option></select></label>
+<label class="wide">Enlaces (uno por línea)<input id="fUrls"></label>
+</div>
+<div class="modal-actions"><button class="action" onclick="closeModal()">cancelar</button><button class="action btn-primary" onclick="addCustom()">guardar</button></div>
+</div>
+</div>
+
+<script>
+const base = [{"id": 1, "title": "La Usucapión. Fundamentos de la Prescripción Adquisitiva de Dominio – Gunther Gonzales Barrón", "scope": "Nacional (Perú)", "format": "Lectura", "position": "Declarativa", "urls": ["https://leegraeditorial.com/product/la-usucapion-fundamentos-de-la-prescripcion-adquisitiva-de-dominio/", "https://juristaeditores.pe/producto/la-usucapion-fundamentos-de-la-prescripcion-adquisitiva-de-dominio/"]}, {"id": 2, "title": "Tratado de Derechos Reales (Tomo I y II) – Gunther Gonzales Barrón", "scope": "Nacional (Perú)", "format": "Lectura", "position": "Declarativa", "urls": ["https://tubiblioteca.utp.edu.pe/cgi-bin/koha/opac-detail.pl?biblionumber=24337", "https://leegraeditorial.com/wp-content/uploads/2025/09/TRATADO-DE-DERECHO-REALES-TOMO-I.pdf"]}, {"id": 3, "title": "Derechos Reales – Jorge Avendaño Valdez y Francisco Avendaño Arana", "scope": "Nacional (Perú)", "format": "Lectura", "position": "Declarativa", "urls": ["https://lpderecho.pe/descarga-pdf-libro-derechos-reales-jorge-avendano-v-y-francisco-avendano-arana/", "https://repositoriodigital.bnp.gob.pe/bnp/recursos/2/html/derechos-reales"]}, {"id": 4, "title": "La naturaleza de la sentencia de prescripción adquisitiva de dominio... – Tesis U. Wiener (2020)", "scope": "Nacional (Perú)", "format": "Lectura", "position": "Declarativa", "urls": ["https://repositorio.uwiener.edu.pe/entities/publication/5d012b11-214f-492e-9027-d012888e60c3", "https://repositorio.uwiener.edu.pe/bitstream/handle/20.500.13053/3843/T061_46109430_T.pdf?sequence=1&isAllowed=y"]}, {"id": 5, "title": "El carácter declarativo de la prescripción adquisitiva de dominio... – Tesis UAP (2020)", "scope": "Nacional (Perú)", "format": "Lectura", "position": "Declarativa", "urls": ["https://alicia.concytec.gob.pe/vufind/Record/UAPI_a2de98909f6f25183e4edf117c58c0e6/Details", "https://repositorio.uap.edu.pe/handle/20.500.12990/4337"]}, {"id": 6, "title": "La interpretación judicial del Artículo 950 y 952... – Investigación (2025)", "scope": "Nacional (Perú)", "format": "Lectura", "position": "Declarativa", "urls": ["https://alicia.concytec.gob.pe/vufind/Record/UTPD_9ade7a8ded8f44cfe8f611d88ed6066b"]}, {"id": 7, "title": "Casación N.° 4083-2017 – Corte Suprema del Perú", "scope": "Nacional (Perú)", "format": "Lectura", "position": "Declarativa", "urls": ["https://tesis.pucp.edu.pe/bitstreams/43c7e544-99ca-4e10-8bbd-fff35d64d86c/download"]}, {"id": 8, "title": "Casación N.° 6610-2019 Lima – Corte Suprema del Perú", "scope": "Nacional (Perú)", "format": "Lectura", "position": "Declarativa", "urls": ["https://img.lpderecho.pe/wp-content/uploads/2022/01/Casacion-3105-2019-Ica-LPDerecho.pdf", "https://enfoquederecho.com/es-la-sentencia-que-declara-la-prescripcion-adquisitiva-de-dominio-titulo-suficiente-para-cancelar-la-inscripcion-de-la-garantia-hipotecaria/"]}, {"id": 9, "title": "Sentencia de prescripción adquisitiva de dominio: ¿declarativa o constitutiva? – Gunther Gonzales Barrón (video)", "scope": "Nacional (Perú)", "format": "Audiovisual", "position": "Declarativa", "urls": ["https://lpderecho.pe/sentencia-prescripcion-adquisitiva-dominio-declarativa-constitutiva/"]}, {"id": 10, "title": "Clase gratuita: Prescripción adquisitiva de bienes del patrimonio cultural – Olegario David Florián Vigo", "scope": "Nacional (Perú)", "format": "Audiovisual", "position": "Declarativa", "urls": ["https://www.youtube.com/watch?v=hTfmvZJ9N38"]}, {"id": 11, "title": "Clase gratuita: Prescripción adquisitiva de dominio – Pedro Gervassi Rivas", "scope": "Nacional (Perú)", "format": "Audiovisual", "position": "Declarativa", "urls": ["https://www.youtube.com/watch?v=fQK1nD3x1yY"]}, {"id": 12, "title": "CURSO: PRESCRIPCIÓN ADQUISITIVA DE DOMINIO - 2025 – ENCAP", "scope": "Nacional (Perú)", "format": "Audiovisual", "position": "Declarativa", "urls": ["https://www.youtube.com/watch?v=1lpdJgtxJF0"]}, {"id": 13, "title": "Plataforma Judicial: Prescripción adquisitiva de dominio", "scope": "Nacional (Perú)", "format": "Audiovisual", "position": "Declarativa", "urls": ["https://www.youtube.com/watch?v=FR0_WQ7hMqY"]}, {"id": 14, "title": "Clase en vivo para aspirantes a notarios: Prescripción adquisitiva de dominio – Fort Ninamancco Córdova", "scope": "Nacional (Perú)", "format": "Audiovisual", "position": "Declarativa", "urls": ["https://www.youtube.com/watch?v=BQKMNUq781k"]}, {"id": 15, "title": "Prescripción adquisitiva de dominio: análisis y guía práctica – José Valderrama", "scope": "Nacional (Perú)", "format": "Audiovisual", "position": "Declarativa", "urls": ["https://www.youtube.com/watch?v=k4oooSgHpgs"]}, {"id": 16, "title": "Sentencia de prescripción adquisitiva de dominio: ¿declarativa o constitutiva? – Artículo LPDerecho", "scope": "Nacional (Perú)", "format": "Lectura", "position": "Declarativa", "urls": ["https://lpderecho.pe/sentencia-prescripcion-adquisitiva-dominio-declarativa-constitutiva/"]}, {"id": 17, "title": "Efectos de la usucapión en las ganancias de capital – Doctrina", "scope": "Nacional (Perú)", "format": "Lectura", "position": "Declarativa", "urls": ["http://www.normaslegalesonline.pe/clp/contenidos.dll/Doctrina/451747/1669796/1669797/1669798/1669802/1669804?fn=document-frame.htm$f=templates$3.0"]}, {"id": 18, "title": "La automaticidad de la prescripción adquisitiva de dominio... – Investigación (2022)", "scope": "Nacional (Perú)", "format": "Lectura", "position": "Declarativa", "urls": ["https://alicia.concytec.gob.pe/vufind/Record/UPRG_9dcaade8a49405beebe3a127e046835f"]}, {"id": 19, "title": "Análisis crítico de los requisitos... usucapión decenal – Tesis maestría Bolivia (2024)", "scope": "Internacional (Bolivia)", "format": "Lectura", "position": "Declarativa", "urls": ["https://bibliotecas.usfx.bo/api-v2//postgrado/archivo/69cae0a56c255fb7a05840b9", "https://www.studocu.com/bo/document/universidad-tecnica-de-oruro/derecho-civil-contratos/usucapion-determinacion-del-caracter-constitutivo-o-meramente/126685317"]}, {"id": 20, "title": "Derechos reales: Breves y novedosas reflexiones... – Domingo C. Cura Grassi (Argentina, 2019)", "scope": "Internacional (Argentina)", "format": "Lectura", "position": "Declarativa", "urls": ["https://aldiaargentina.microjuris.com/2019/10/22/derechos-reales-breves-y-novedosas-reflexiones-referidas-al-tratamiento-de-la-prescripcion-adquisitiva-en-el-codigo-civil-y-comercial-propuestas-superadoras/"]}, {"id": 21, "title": "¿Es la sentencia que declara la prescripción adquisitiva...? – Enfoque Derecho (2024)", "scope": "Nacional (Perú)", "format": "Lectura", "position": "Declarativa", "urls": ["https://enfoquederecho.com/es-la-sentencia-que-declara-la-prescripcion-adquisitiva-de-dominio-titulo-suficiente-para-cancelar-la-inscripcion-de-la-garantia-hipotecaria/"]}, {"id": 22, "title": "Jurisprudencia del artículo 950 del Código Civil – LPDerecho", "scope": "Nacional (Perú)", "format": "Lectura", "position": "Declarativa", "urls": ["https://lpderecho.pe/articulo-950-del-codigo-civil-prescripcion-adquisitiva/"]}, {"id": 23, "title": "Casación Nº 3332-2013, La Libertad – Corte Suprema del Perú", "scope": "Nacional (Perú)", "format": "Lectura", "position": "Constitutiva", "urls": ["https://lpderecho.pe/casacion-3332-2013-la-libertad-prescripcion-adquisitiva-dominio-solo-genera-derecho-expectaticio/", "https://es.scribd.com/document/748699153/Usucapion-Genera-derecho-expectaticio-Cas-3332-2013-La-Libertad", "https://iuslatin.pe/wp-content/uploads/2020/07/CUADERNOS-DE-JURISPRUDENCIA-VOL.-1.pdf"]}, {"id": 24, "title": "Pleno Jurisdiccional Distrital Ica (2008)", "scope": "Nacional (Perú)", "format": "Lectura", "position": "Constitutiva", "urls": ["https://img.lpderecho.pe/wp-content/uploads/2023/10/Pleno-Jurisdiccional-Civil-Familia-Ica-2008-LPDerecho_.pdf", "https://lpderecho.pe/derecho-propiedad-adquirido-mediante-prescripcion-adquisitiva-declarado-judicialmente-sentencia-constitutiva-pleno-jurisdiccional-civil-ica-2008/"]}, {"id": 25, "title": "Marco institucional de la prescripción adquisitiva de bienes estatales... – Tesis U. Autónoma de Ica (2021)", "scope": "Nacional (Perú)", "format": "Lectura", "position": "Constitutiva", "urls": ["https://repositorio.autonomadeica.edu.pe/bitstream/20.500.14441/1212/1/Gener%20Isaac%20Sinti%20Jabo.pdf"]}, {"id": 26, "title": "Prescripción adquisitiva y la seguridad jurídica de la propiedad... – Tesis U. Señor de Sipán (2024)", "scope": "Nacional (Perú)", "format": "Lectura", "position": "Constitutiva", "urls": ["https://alicia.concytec.gob.pe/vufind/Record/USSS_16a0102dd00a4e0ec3a95168e8a15232/Details", "https://repositorio.uss.edu.pe/handle/20.500.12802/13226?show=full"]}, {"id": 27, "title": "El derecho expectaticio de propiedad por prescripción positiva... – Tesis U. Hermilio Valdizán (2018)", "scope": "Nacional (Perú)", "format": "Lectura", "position": "Constitutiva", "urls": ["https://repositorio.unheval.edu.pe/handle/20.500.13080/2856"]}, {"id": 28, "title": "La prescripción adquisitiva – Libro colectivo U. Libre de Bogotá (Colombia, 2017)", "scope": "Internacional (Colombia)", "format": "Lectura", "position": "Constitutiva", "urls": ["https://repository.unilibre.edu.co/handle/10901/19598"]}, {"id": 29, "title": "Prescripción adquisitiva (2ª ed.) – Claudio Kiper (Argentina)", "scope": "Internacional (Argentina)", "format": "Lectura", "position": "Constitutiva", "urls": ["https://biblioteca.csjn.gov.ar/Indices/Biblio/CSJN155556.pdf"]}, {"id": 30, "title": "La prescripción adquisitiva – Pablo María Corna (Tesis doctoral, UCA Argentina, 1983)", "scope": "Internacional (Argentina)", "format": "Lectura", "position": "Constitutiva", "urls": ["https://repositorio.uca.edu.ar/handle/123456789/197"]}, {"id": 31, "title": "Prescripción adquisitiva: Cuestiones relevantes... – Comercio y Justicia (Argentina, 2026)", "scope": "Internacional (Argentina)", "format": "Lectura", "position": "Constitutiva", "urls": ["https://comercioyjusticia.info/semanario-juridico/prescripcion-adquisitiva-cuestiones-relevantes-en-distintos-procesos-e-instancias-judiciales/"]}, {"id": 32, "title": "Estudio de la prescripción adquisitiva no declarada judicialmente – Colegio de Escribanos (Argentina)", "scope": "Internacional (Argentina)", "format": "Lectura", "position": "Constitutiva", "urls": ["https://www.colegio-escribanos.org.ar/biblioteca/cgi-bin/ESCRI/ARTICULOS/62852.pdf"]}, {"id": 33, "title": "Sentencia Corte Suprema de Colombia – Sala de Casación Civil (2023)", "scope": "Internacional (Colombia)", "format": "Lectura", "position": "Declarativa", "urls": ["https://cortesuprema.gov.co/corte/wp-content/uploads/2023/12/SC388-2023-2019-00182-01-1.pdf", "https://cortesuprema.gov.co/corte/index.php/doctrina/", "https://www.ramajudicial.gov.co/documents/7849818/94028539/PRESCRIPCI%C3%93N-ELEMENTOS-CARGA+PRUEBA.pdf/058dce10-d96f-4076-b04b-c4733e2dbb0a"]}, {"id": 34, "title": "STS 540/2012, 19 de noviembre de 2012 – Tribunal Supremo de España", "scope": "Internacional (España)", "format": "Lectura", "position": "Declarativa", "urls": ["https://vlex.es/vid/declarativa-prescripcion-usucapion-417484814", "https://dialnet.unirioja.es/servlet/articulo?codigo=4422545"]}, {"id": 35, "title": "STS 389/2014, 6 de noviembre de 2014 – Tribunal Supremo de España", "scope": "Internacional (España)", "format": "Lectura", "position": "Declarativa", "urls": ["https://www.boe.es/biblioteca_juridica/anuarios_derecho/abrir_pdf.php?id=ANU-C-2014-30111501162", "https://www.boe.es/biblioteca_juridica/comentarios_sentencias_unificacion_doctrina_civil_y_mercantil/abrir_pdf.php?id=COM-D-2013-51"]}, {"id": 36, "title": "Resolución BOE-A-2024-25403 – Dirección General de Seguridad Jurídica (España, 2024)", "scope": "Internacional (España)", "format": "Lectura", "position": "Declarativa", "urls": ["https://www.boe.es/diario_boe/txt.php?id=BOE-A-2024-25403"]}, {"id": 37, "title": "Aportes jurisprudenciales y doctrinales sobre la prescripción adquisitiva... – Serrano Gómez & Acevedo Prada (Colombia, 2012)", "scope": "Internacional (Colombia)", "format": "Lectura", "position": "Declarativa", "urls": ["http://www.scielo.org.co/scielo.php?script=sci_arttext&pid=S1900-38032012000100008"]}, {"id": 38, "title": "Naturaleza declarativa de la sentencia sobre prescripción adquisitiva... – Tesis UNSAAC (2019)", "scope": "Nacional (Perú)", "format": "Lectura", "position": "Declarativa", "urls": ["https://repositorio.unsaac.edu.pe/handle/20.500.12918/4553?locale-attribute=es"]}, {"id": 39, "title": "STS 1209/1994, 30 de diciembre de 1994 – Tribunal Supremo de España", "scope": "Internacional (España)", "format": "Lectura", "position": "Declarativa", "urls": ["https://vlex.es/vid/adquisitiva-declarativa-pacifica-1959-1945-17739926"]}, {"id": 40, "title": "La prescripción adquisitiva y usucapión en España – Lealtadis (2026)", "scope": "Internacional (España)", "format": "Lectura", "position": "Declarativa", "urls": ["https://www.lealtadis.es/prescripcion-adquisitiva-usucapion-derecho-civil-espanol/"]}, {"id": 41, "title": "Usucapión de automotores en el CCCN – Microjuris Argentina (2017)", "scope": "Internacional (Argentina)", "format": "Lectura", "position": "Declarativa", "urls": ["https://aldiaargentina.microjuris.com/2017/02/09/usucapion-de-automotores-en-el-codigo-civil-y-comercial-de-la-nacion/"]}, {"id": 42, "title": "La prescripción adquisitiva de bienes inmuebles. Estudio comparado – TFM U. Alcalá (España, 2023)", "scope": "Internacional (España)", "format": "Lectura", "position": "Declarativa", "urls": ["https://ebuah.uah.es/dspace/bitstream/handle/10017/58200/TFM_Garcia_delaCalle_2023.pdf?sequence=1&isAllowed=y"]}, {"id": 43, "title": "Usucapión de Automotores en el Nuevo CCCN – AGA Capital (Argentina)", "scope": "Internacional (Argentina)", "format": "Lectura", "position": "Declarativa", "urls": ["https://www.agacapital.org.ar/Servicios/Usucapi%C3%B3n.pdf"]}];
+let custom = JSON.parse(localStorage.getItem("usucapion_custom") || "[]");
+
+function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));}
+function linkList(urls){return (urls||[]).map(u=>`<a href="${esc(u)}" target="_blank" rel="noopener">${esc(u)}</a>`).join("")}
+function row(r,i,remove=false){
+ let pos=r.position==="Declarativa"?"decl":"const", scope=r.scope.startsWith("Nacional")?"nat":"int";
+ return `<tr><td>${esc(r.id??i+1)}</td><td>${esc(r.title)}</td><td><span class="badge ${scope}">${esc(r.scope)}</span></td><td>${esc(r.format)}</td><td><span class="badge ${pos}">${esc(r.position)}</span></td><td class="url-list">${linkList(r.urls)}</td>${remove?`<td><button class="action btn-danger" onclick="removeCustom(${i})">quitar</button></td>`:""}</tr>`;
+}
+function renderBase(){
+ const q=document.getElementById("searchBase").value.toLowerCase(), f=document.getElementById("filterBase").value;
+ const out=base.filter(r=>(!q||JSON.stringify(r).toLowerCase().includes(q))&&(!f||r.position===f));
+ document.getElementById("baseBody").innerHTML=out.map((r,i)=>row(r,i)).join("")||`<tr><td colspan="6">sin resultados</td></tr>`;
+}
+function renderCustom(){
+ const q=document.getElementById("searchCustom").value.toLowerCase();
+ const out=custom.filter(r=>JSON.stringify(r).toLowerCase().includes(q));
+ document.getElementById("customBody").innerHTML=out.map((r,i)=>row(r,i,true)).join("")||`<tr><td colspan="7">sin fuentes agregadas</td></tr>`;
+}
+function all(){return base.concat(custom)}
+function stats(){
+ const a=all(), n=a.filter(x=>x.scope.startsWith("Nacional")).length, intl=a.length-n;
+ const d=a.filter(x=>x.position==="Declarativa").length, c=a.filter(x=>x.position==="Constitutiva").length;
+ document.getElementById("statsCards").innerHTML=[
+  [a.length,"fuentes totales"],[n,"nacionales"],[intl,"internacionales"],[d,"declarativas"],[c,"constitutivas"],[a.filter(x=>x.format==="Lectura").length,"lecturas"],[a.filter(x=>x.format==="Audiovisual").length,"audiovisuales"]
+ ].map(x=>`<div class="stat"><div class="num">${x[0]}</div><div class="label">${x[1]}</div></div>`).join("");
+ draw("scopeChart",["Nacionales","Internacionales"],[n,intl]);
+ draw("positionChart",["Declarativas","Constitutivas"],[d,c]);
+ const nn=a.filter(x=>x.scope.startsWith("Nacional")&&x.position==="Declarativa").length;
+ const nc=a.filter(x=>x.scope.startsWith("Nacional")&&x.position==="Constitutiva").length;
+ const ii=a.filter(x=>!x.scope.startsWith("Nacional")&&x.position==="Declarativa").length;
+ const ic=a.filter(x=>!x.scope.startsWith("Nacional")&&x.position==="Constitutiva").length;
+ draw("crossChart",["Nac/Decl","Nac/Const","Int/Decl","Int/Const"],[nn,nc,ii,ic]);
+ const lect=a.filter(x=>x.format==="Lectura").length, aud=a.filter(x=>x.format==="Audiovisual").length;
+ draw("formatChart",["Lecturas","Audiovisuales"],[lect,aud]);
+}
+function draw(id,labels,values){
+ const c=document.getElementById(id), ctx=c.getContext("2d"), d=devicePixelRatio||1;
+ const w=c.clientWidth,h=c.clientHeight;c.width=w*d;c.height=h*d;ctx.setTransform(d,0,0,d,0,0);
+ ctx.clearRect(0,0,w,h); const max=Math.max(...values,1), pad=45, gap=20, bw=(w-pad*2-gap*(values.length-1))/values.length;
+ ctx.strokeStyle="#586e75";ctx.fillStyle="#839496";ctx.font="11px monospace";ctx.lineWidth=1;
+ ctx.beginPath();ctx.moveTo(pad,15);ctx.lineTo(pad,h-35);ctx.lineTo(w-15,h-35);ctx.stroke();
+ values.forEach((v,i)=>{let bh=(h-65)*v/max,x=pad+i*(bw+gap),y=h-35-bh;
+  ctx.fillStyle=i%2?"#cb4b16":"#2aa198";ctx.fillRect(x,y,bw,bh);
+  ctx.fillStyle="#93a1a1";ctx.textAlign="center";ctx.fillText(labels[i],x+bw/2,h-17);ctx.fillText(v,x+bw/2,y-6);
+ });
+}
+function openModal(){document.getElementById("modal").classList.add("open");document.getElementById("fTitle").focus()}
+function closeModal(){document.getElementById("modal").classList.remove("open")}
+function addCustom(){
+ const title=document.getElementById("fTitle").value.trim(); if(!title)return alert("El título es obligatorio.");
+ custom.push({id:"A"+(custom.length+1),title,scope:document.getElementById("fScope").value,format:document.getElementById("fFormat").value,position:document.getElementById("fPosition").value,urls:document.getElementById("fUrls").value.split("\n").map(x=>x.trim()).filter(Boolean)});
+ localStorage.setItem("usucapion_custom",JSON.stringify(custom));["fTitle","fUrls"].forEach(id=>document.getElementById(id).value="");closeModal();renderCustom();stats();
+}
+function removeCustom(i){if(confirm("¿Quitar esta fuente?")){custom.splice(i,1);localStorage.setItem("usucapion_custom",JSON.stringify(custom));renderCustom();stats()}}
+function clearCustom(){if(confirm("¿Eliminar todas las fuentes agregadas?")){custom=[];localStorage.removeItem("usucapion_custom");renderCustom();stats()}}
+function exportJSON(){download("fuentes-usucapion.json",JSON.stringify(all(),null,2),"application/json")}
+function exportCSV(){
+ const lines=[["id","title","scope","format","position","urls"].join(",")].concat(all().map(r=>[r.id,r.title,r.scope,r.format,r.position,(r.urls||[]).join(" | ")].map(v=>`"${String(v).replaceAll('"','""')}"`).join(",")));
+ download("fuentes-usucapion.csv",lines.join("\n"),"text/csv;charset=utf-8")
+}
+function download(name,data,type){const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([data],{type}));a.download=name;a.click();URL.revokeObjectURL(a.href)}
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{document.querySelectorAll("nav button,.panel").forEach(x=>x.classList.remove("active"));b.classList.add("active");document.getElementById(b.dataset.tab).classList.add("active");if(b.dataset.tab==="stats")stats()});
+renderBase();renderCustom();stats();
+window.addEventListener("resize",stats);
+</script>
+</body>
+</html>
